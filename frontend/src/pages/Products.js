@@ -24,7 +24,7 @@ function ProductModal({ product, onClose, onSave }) {
         low_stock_threshold: parseInt(form.low_stock_threshold),
       };
       if (product) {
-        await productsApi.update(product.id, payload);
+        await productsApi.replace(product.id, payload);
         toast.success('Product updated');
       } else {
         await productsApi.create(payload);
@@ -53,7 +53,7 @@ function ProductModal({ product, onClose, onSave }) {
             </div>
             <div className="field">
               <label>SKU *</label>
-              <input name="sku" value={form.sku} onChange={handleChange} placeholder="e.g. WH-001" disabled={!!product} />
+              <input name="sku" value={form.sku} onChange={handleChange} placeholder="e.g. WH-001" />
             </div>
             <div className="field">
               <label>Price (₹) *</label>
@@ -79,7 +79,11 @@ function ProductModal({ product, onClose, onSave }) {
         </div>
         <div className="modal-footer">
           <button className="btn btn-secondary" onClick={onClose}>Cancel</button>
-          <button className="btn btn-primary" onClick={handleSubmit} disabled={loading || !form.name || !form.sku || !form.price}>
+          <button
+            className="btn btn-primary"
+            onClick={handleSubmit}
+            disabled={loading || !form.name || !form.sku || !form.price || form.stock_quantity === ''}
+          >
             {loading ? <><div className="spinner" style={{width:14,height:14}} /> Saving...</> : (product ? 'Update' : 'Create Product')}
           </button>
         </div>

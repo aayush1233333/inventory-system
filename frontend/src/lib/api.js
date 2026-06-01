@@ -1,44 +1,22 @@
 import axios from 'axios';
 
-const BASE_URL = process.env.REACT_APP_API_URL || '';
+const REMOTE_API_URL = process.env.REACT_APP_API_URL?.replace(/\/$/, '');
+const BASE_URL = REMOTE_API_URL || '/api';
 
 const api = axios.create({
-  baseURL: `${BASE_URL}/api/v1`,
+  baseURL: BASE_URL,
   headers: { 'Content-Type': 'application/json' },
 });
 
-// Restore token from storage on load
-const storedToken = localStorage.getItem('sf_token');
-if (storedToken) {
-  api.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
-}
-
-// Response interceptor — redirect to login on 401
-api.interceptors.response.use(
-  (res) => res,
-  (err) => {
-    if (
-      err.response?.status === 401 &&
-      window.location.pathname !== '/login'
-    ) {
-      localStorage.removeItem('sf_token');
-      delete api.defaults.headers.common['Authorization'];
-      window.location.href = '/login';
-    }
-    return Promise.reject(err);
-  }
-);
-
-// ── Products ─────────────────────────────────────────────────────────────────
 export const productsApi = {
   list: (params = {}) => api.get('/products', { params }),
   get: (id) => api.get(`/products/${id}`),
   create: (data) => api.post('/products', data),
+  replace: (id, data) => api.put(`/products/${id}`, data),
   update: (id, data) => api.patch(`/products/${id}`, data),
   delete: (id) => api.delete(`/products/${id}`),
 };
 
-// ── Customers ─────────────────────────────────────────────────────────────────
 export const customersApi = {
   list: (params = {}) => api.get('/customers', { params }),
   get: (id) => api.get(`/customers/${id}`),
@@ -47,7 +25,6 @@ export const customersApi = {
   delete: (id) => api.delete(`/customers/${id}`),
 };
 
-// ── Orders ────────────────────────────────────────────────────────────────────
 export const ordersApi = {
   list: (params = {}) => api.get('/orders', { params }),
   get: (id) => api.get(`/orders/${id}`),
@@ -56,16 +33,8 @@ export const ordersApi = {
   delete: (id) => api.delete(`/orders/${id}`),
 };
 
-// ── Dashboard ─────────────────────────────────────────────────────────────────
 export const dashboardApi = {
   stats: () => api.get('/dashboard/stats'),
-};
-
-// ── Auth ──────────────────────────────────────────────────────────────────────
-export const authApi = {
-  login: (data) => api.post('/auth/login', data),
-  register: (data) => api.post('/auth/register', data),
-  me: () => api.get('/auth/me'),
 };
 
 export default api;

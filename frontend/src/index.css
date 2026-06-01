@@ -595,8 +595,39 @@ textarea { resize: vertical; min-height: 80px; }
 }
 
 /* Responsive */
+/* Hamburger menu button — hidden on desktop */
+.hamburger-btn { display: none; padding: 6px; }
+.hamburger-btn svg { width: 20px; height: 20px; }
+
+/* Sidebar overlay for mobile */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 99;
+  backdrop-filter: blur(2px);
+}
+
+/* Sidebar close button — hidden on desktop */
+.sidebar-close-btn { display: none; padding: 6px; margin-right: 10px; }
+.sidebar-close-btn svg { width: 20px; height: 20px; }
+
+/* Sidebar header row for mobile */
+.sidebar-header-row { display: none; }
+
 @media (max-width: 768px) {
-  .sidebar { transform: translateX(-100%); }
+  .hamburger-btn { display: inline-flex; }
+  .sidebar-overlay { display: block; }
+  .sidebar-close-btn { display: inline-flex; }
+  .sidebar-header-row { display: flex; align-items: center; border-bottom: 1px solid var(--border); }
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+  }
+  .sidebar.sidebar-open {
+    transform: translateX(0);
+  }
   .main-content { margin-left: 0; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
   .form-grid { grid-template-columns: 1fr; }

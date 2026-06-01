@@ -1,26 +1,30 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   BrowserRouter,
-  Routes,
-  Route,
   NavLink,
   Navigate,
+  Outlet,
+  Route,
+  Routes,
   useLocation,
 } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import {
-  LayoutDashboard, Package, Users, ShoppingCart,
-  AlertTriangle, LogOut, User,
+  AlertTriangle,
+  LayoutDashboard,
+  Menu,
+  Package,
+  ShoppingCart,
+  Users,
+  X,
 } from 'lucide-react';
-import './index.css';
 
-import { AuthProvider, useAuth } from './context/AuthContext';
-import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import Products from './pages/Products';
+import './index.css';
 import Customers from './pages/Customers';
-import Orders from './pages/Orders';
+import Dashboard from './pages/Dashboard';
 import Inventory from './pages/Inventory';
+import Orders from './pages/Orders';
+import Products from './pages/Products';
 
 const NAV = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -30,18 +34,24 @@ const NAV = [
   { to: '/inventory', icon: AlertTriangle, label: 'Inventory' },
 ];
 
-// ── Sidebar ───────────────────────────────────────────────────────────────────
-function Sidebar() {
+function Sidebar({ open, onClose }) {
   const location = useLocation();
-  const { user, logout } = useAuth();
+
+  useEffect(() => {
+    if (open) onClose();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
 
   return (
-    <aside className="sidebar">
-      <div className="sidebar-logo">
-        <h1>
-          Stock<span>Flow</span>
-        </h1>
-        <p>Inventory OS v1.0</p>
+    <aside className={`sidebar ${open ? 'sidebar-open' : ''}`}>
+      <div className="sidebar-header-row">
+        <div className="sidebar-logo" style={{ flex: 1, borderBottom: 'none', padding: '24px 20px' }}>
+          <h1>
+            Stock<span>Flow</span>
+          </h1>
+          <p>Assessment Build</p>
+        </div>
+        <button className="btn btn-ghost sidebar-close-btn" onClick={onClose}><X /></button>
       </div>
 
       <nav className="sidebar-nav">
@@ -49,6 +59,7 @@ function Sidebar() {
         {NAV.map(({ to, icon: Icon, label }) => {
           const isActive =
             to === '/' ? location.pathname === '/' : location.pathname.startsWith(to);
+
           return (
             <NavLink
               key={to}
@@ -61,89 +72,42 @@ function Sidebar() {
         })}
       </nav>
 
-      {/* User info + logout */}
       <div
         style={{
-          padding: '12px 14px',
+          padding: '14px',
           borderTop: '1px solid var(--border)',
           marginTop: 'auto',
         }}
       >
         <div
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            padding: '8px 6px',
+            padding: '12px 14px',
             borderRadius: 'var(--radius)',
+            background: 'var(--surface-2)',
+            border: '1px solid var(--border)',
           }}
         >
           <div
             style={{
-              width: 30,
-              height: 30,
-              borderRadius: '50%',
-              background: 'var(--accent-dim)',
-              border: '1px solid var(--accent)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}
-          >
-            <User size={14} style={{ color: 'var(--accent)' }} />
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div
-              style={{
-                fontSize: 13,
-                fontWeight: 600,
-                color: 'var(--text)',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }}
-            >
-              {user?.name}
-            </div>
-            <div
-              style={{
-                fontSize: 11,
-                color: 'var(--text-3)',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }}
-            >
-              {user?.email}
-            </div>
-          </div>
-          <button
-            onClick={logout}
-            title="Sign out"
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
+              fontSize: 12,
               color: 'var(--text-3)',
-              padding: 4,
-              borderRadius: 6,
-              display: 'flex',
-              alignItems: 'center',
-              transition: 'color 0.15s',
+              fontFamily: 'var(--font-mono)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+              marginBottom: 6,
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--red)')}
-            onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-3)')}
           >
-            <LogOut size={15} />
-          </button>
+            Required Stack
+          </div>
+          <div style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.5 }}>
+            React, Python API, PostgreSQL, Docker, and Docker Compose.
+          </div>
         </div>
       </div>
     </aside>
   );
 }
 
-// ── Page title from route ─────────────────────────────────────────────────────
 function PageTitle() {
   const location = useLocation();
   const titles = {
@@ -153,40 +117,27 @@ function PageTitle() {
     '/orders': 'Orders',
     '/inventory': 'Inventory Alerts',
   };
+
   const path = Object.keys(titles).find(
-    (k) => k === location.pathname || (k !== '/' && location.pathname.startsWith(k))
+    (key) => key === location.pathname || (key !== '/' && location.pathname.startsWith(key))
   );
+
   return <span className="topbar-title">{titles[path] || 'StockFlow'}</span>;
 }
 
-// ── Protected route wrapper ───────────────────────────────────────────────────
-function ProtectedRoute({ children }) {
-  const { isAuthenticated, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div
-        style={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: 'var(--bg)',
-        }}
-      >
-        <div className="spinner" style={{ width: 28, height: 28 }} />
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
+function Layout() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
     <div className="app-shell">
-      <Sidebar />
+      {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
+      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="main-content">
         <header className="topbar">
-          <PageTitle />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <button className="btn btn-ghost hamburger-btn" onClick={() => setSidebarOpen(true)}><Menu /></button>
+            <PageTitle />
+          </div>
           <div className="topbar-actions">
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <div
@@ -205,78 +156,44 @@ function ProtectedRoute({ children }) {
                   fontFamily: 'var(--font-mono)',
                 }}
               >
-                System Online
+                Assessment Ready
               </span>
             </div>
           </div>
         </header>
-        <main className="page-body">{children}</main>
+        <main className="page-body">
+          <Outlet />
+        </main>
       </div>
     </div>
   );
 }
 
-// ── App root ──────────────────────────────────────────────────────────────────
 export default function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            style: {
-              background: 'var(--surface-2)',
-              color: 'var(--text)',
-              border: '1px solid var(--border-2)',
-              fontFamily: 'var(--font-body)',
-              fontSize: 13,
-            },
-          }}
-        />
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/products"
-            element={
-              <ProtectedRoute>
-                <Products />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/customers"
-            element={
-              <ProtectedRoute>
-                <Customers />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/orders"
-            element={
-              <ProtectedRoute>
-                <Orders />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/inventory"
-            element={
-              <ProtectedRoute>
-                <Inventory />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+    <BrowserRouter>
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          style: {
+            background: 'var(--surface-2)',
+            color: 'var(--text)',
+            border: '1px solid var(--border-2)',
+            fontFamily: 'var(--font-body)',
+            fontSize: 13,
+          },
+        }}
+      />
+      <Routes>
+        <Route element={<Layout />}>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/products" element={<Products />} />
+          <Route path="/customers" element={<Customers />} />
+          <Route path="/orders" element={<Orders />} />
+          <Route path="/inventory" element={<Inventory />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   );
 }

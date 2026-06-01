@@ -34,7 +34,7 @@ This project already includes the core application stack:
 
 ## Final deliverables
 
-- GitHub repository: `TBD`
+- GitHub repository: `https://github.com/aayush1233333/inventory-system-complete`
 - Backend Docker image: `TBD`
 - Frontend Docker image: `TBD`
 - Live frontend URL: `TBD`

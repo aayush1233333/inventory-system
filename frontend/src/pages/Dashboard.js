@@ -139,10 +139,10 @@ export default function Dashboard() {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {[
+              { label: 'Frontend UI', status: 'Responsive', color: 'var(--green)' },
               { label: 'Backend API', status: 'Operational', color: 'var(--green)' },
               { label: 'PostgreSQL DB', status: 'Connected', color: 'var(--green)' },
-              { label: 'Auth Service', status: 'Active', color: 'var(--green)' },
-              { label: 'Order Engine', status: 'Running', color: 'var(--green)' },
+              { label: 'Docker Stack', status: 'Ready', color: 'var(--green)' },
             ].map(({ label, status, color }) => (
               <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ color: 'var(--text-2)', fontSize: 13 }}>{label}</span>

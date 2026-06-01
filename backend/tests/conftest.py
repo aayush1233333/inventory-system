@@ -4,7 +4,7 @@ from collections.abc import Generator
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 
 from app.core.database import Base, get_db
@@ -20,11 +20,19 @@ def client() -> Generator[TestClient, None, None]:
         f"sqlite:///{db_path}",
         connect_args={"check_same_thread": False},
     )
-    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+    @event.listens_for(engine, "connect")
+    def set_sqlite_pragma(dbapi_connection, connection_record):  # pragma: no cover
+        del connection_record
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
+
+    testing_session_local = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     Base.metadata.create_all(bind=engine)
 
     def override_get_db():
-        db = TestingSessionLocal()
+        db = testing_session_local()
         try:
             yield db
         finally:
@@ -40,28 +48,3 @@ def client() -> Generator[TestClient, None, None]:
         Base.metadata.drop_all(bind=engine)
         engine.dispose()
         os.remove(db_path)
-
-
-@pytest.fixture()
-def auth_headers(client: TestClient) -> dict[str, str]:
-    email = "owner@example.com"
-    password = "password123"
-
-    register_response = client.post(
-        "/api/v1/auth/register",
-        json={
-            "name": "Inventory Owner",
-            "email": email,
-            "password": password,
-        },
-    )
-    assert register_response.status_code == 201
-
-    login_response = client.post(
-        "/api/v1/auth/login",
-        json={"email": email, "password": password},
-    )
-    assert login_response.status_code == 200
-
-    token = login_response.json()["access_token"]
-    return {"Authorization": f"Bearer {token}"}

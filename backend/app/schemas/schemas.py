@@ -1,10 +1,10 @@
-from pydantic import BaseModel, EmailStr, field_validator
-from typing import Optional, List
 from datetime import datetime
+from typing import List, Optional
+
+from pydantic import BaseModel, EmailStr, Field, field_validator
+
 from app.models.models import OrderStatus
 
-
-# ── Auth Schemas ─────────────────────────────────────────────────────────────
 
 class UserCreate(BaseModel):
     name: str
@@ -13,10 +13,10 @@ class UserCreate(BaseModel):
 
     @field_validator("password")
     @classmethod
-    def password_min_length(cls, v):
-        if len(v) < 8:
+    def password_min_length(cls, value: str) -> str:
+        if len(value) < 8:
             raise ValueError("Password must be at least 8 characters")
-        return v
+        return value
 
 
 class UserLogin(BaseModel):
@@ -40,8 +40,6 @@ class Token(BaseModel):
     user: UserOut
 
 
-# ── Product Schemas ──────────────────────────────────────────────────────────
-
 class ProductBase(BaseModel):
     name: str
     sku: str
@@ -53,17 +51,24 @@ class ProductBase(BaseModel):
 
     @field_validator("price")
     @classmethod
-    def price_must_be_positive(cls, v):
-        if v <= 0:
+    def price_must_be_positive(cls, value: float) -> float:
+        if value <= 0:
             raise ValueError("Price must be positive")
-        return v
+        return value
 
     @field_validator("stock_quantity")
     @classmethod
-    def stock_non_negative(cls, v):
-        if v < 0:
+    def stock_non_negative(cls, value: int) -> int:
+        if value < 0:
             raise ValueError("Stock quantity cannot be negative")
-        return v
+        return value
+
+    @field_validator("low_stock_threshold")
+    @classmethod
+    def threshold_non_negative(cls, value: int) -> int:
+        if value < 0:
+            raise ValueError("Low stock threshold cannot be negative")
+        return value
 
 
 class ProductCreate(ProductBase):
@@ -72,11 +77,33 @@ class ProductCreate(ProductBase):
 
 class ProductUpdate(BaseModel):
     name: Optional[str] = None
+    sku: Optional[str] = None
     description: Optional[str] = None
     price: Optional[float] = None
     stock_quantity: Optional[int] = None
     low_stock_threshold: Optional[int] = None
     category: Optional[str] = None
+
+    @field_validator("price")
+    @classmethod
+    def price_must_be_positive(cls, value: Optional[float]) -> Optional[float]:
+        if value is not None and value <= 0:
+            raise ValueError("Price must be positive")
+        return value
+
+    @field_validator("stock_quantity")
+    @classmethod
+    def stock_non_negative(cls, value: Optional[int]) -> Optional[int]:
+        if value is not None and value < 0:
+            raise ValueError("Stock quantity cannot be negative")
+        return value
+
+    @field_validator("low_stock_threshold")
+    @classmethod
+    def threshold_non_negative(cls, value: Optional[int]) -> Optional[int]:
+        if value is not None and value < 0:
+            raise ValueError("Low stock threshold cannot be negative")
+        return value
 
 
 class ProductOut(ProductBase):
@@ -86,8 +113,6 @@ class ProductOut(ProductBase):
 
     model_config = {"from_attributes": True}
 
-
-# ── Customer Schemas ─────────────────────────────────────────────────────────
 
 class CustomerBase(BaseModel):
     name: str
@@ -115,18 +140,16 @@ class CustomerOut(CustomerBase):
     model_config = {"from_attributes": True}
 
 
-# ── Order Schemas ────────────────────────────────────────────────────────────
-
 class OrderItemCreate(BaseModel):
     product_id: int
     quantity: int
 
     @field_validator("quantity")
     @classmethod
-    def quantity_positive(cls, v):
-        if v <= 0:
+    def quantity_positive(cls, value: int) -> int:
+        if value <= 0:
             raise ValueError("Quantity must be at least 1")
-        return v
+        return value
 
 
 class OrderItemOut(BaseModel):
@@ -146,10 +169,10 @@ class OrderCreate(BaseModel):
 
     @field_validator("items")
     @classmethod
-    def items_not_empty(cls, v):
-        if not v:
+    def items_not_empty(cls, value: List[OrderItemCreate]) -> List[OrderItemCreate]:
+        if not value:
             raise ValueError("Order must have at least one item")
-        return v
+        return value
 
 
 class OrderStatusUpdate(BaseModel):
@@ -165,12 +188,10 @@ class OrderOut(BaseModel):
     created_at: datetime
     updated_at: Optional[datetime] = None
     customer: Optional[CustomerOut] = None
-    items: List[OrderItemOut] = []
+    items: List[OrderItemOut] = Field(default_factory=list)
 
     model_config = {"from_attributes": True}
 
-
-# ── Pagination Schema ────────────────────────────────────────────────────────
 
 class PaginatedResponse(BaseModel):
     items: list
@@ -178,8 +199,6 @@ class PaginatedResponse(BaseModel):
     skip: int
     limit: int
 
-
-# ── Dashboard Schema ─────────────────────────────────────────────────────────
 
 class DashboardStats(BaseModel):
     total_products: int

@@ -11,8 +11,6 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    # ports: # Exposed for local dev only — remove in production
-      # - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-inventory_db}"]
       interval: 10s
@@ -32,7 +30,7 @@ services:
       SECRET_KEY: ${SECRET_KEY:-changeme-use-a-real-secret}
       APP_ENV: ${APP_ENV:-production}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:80,http://localhost:3000,http://localhost}
-    # ports: # Exposed for local dev only — remove in production
+    ports:
       - "8000:8000"
     depends_on:
       db:
@@ -48,7 +46,7 @@ services:
         REACT_APP_API_URL: ""
     container_name: stockflow_frontend
     restart: unless-stopped
-    # ports: # Exposed for local dev only — remove in production
+    ports:
       - "80:80"
     depends_on:
       - backend

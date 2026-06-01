@@ -1,5 +1,6 @@
-from pydantic_settings import BaseSettings
 from functools import lru_cache
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -7,13 +8,11 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "changeme-in-production"
     APP_ENV: str = "development"
     CORS_ORIGINS: str = "http://localhost:3000,http://localhost:80"
+    model_config = SettingsConfigDict(env_file=".env")
 
     @property
     def cors_origins_list(self) -> list[str]:
         return [o.strip() for o in self.CORS_ORIGINS.split(",")]
-
-    class Config:
-        env_file = ".env"
 
 
 @lru_cache()

@@ -20,7 +20,9 @@ node_modules/
 frontend/build/
 
 # Docker
-*.dockerignore
+!.dockerignore
+!backend/.dockerignore
+!frontend/.dockerignore
 
 # Misc
 .DS_Store
