@@ -18,6 +18,7 @@ import {
   Users,
   X,
 } from 'lucide-react';
+import { Analytics } from '@vercel/analytics/react';
 
 import './index.css';
 import Customers from './pages/Customers';
@@ -140,6 +141,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
+      <Analytics />
     </BrowserRouter>
   );
 }
