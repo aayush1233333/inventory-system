@@ -9,6 +9,7 @@ import {
   useLocation,
 } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import {
   AlertTriangle,
   LayoutDashboard,
@@ -139,6 +140,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
+      <SpeedInsights />
     </BrowserRouter>
   );
 }
