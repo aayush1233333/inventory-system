@@ -28,6 +28,14 @@ app.include_router(customers.router)
 app.include_router(orders.router)
 app.include_router(dashboard.router)
 
+# Accept /api/... directly as well as root routes. Docker nginx strips /api
+# before proxying, but separate live deployments and CRA's local proxy often do not.
+app.include_router(auth.router, prefix="/api", include_in_schema=False)
+app.include_router(products.router, prefix="/api", include_in_schema=False)
+app.include_router(customers.router, prefix="/api", include_in_schema=False)
+app.include_router(orders.router, prefix="/api", include_in_schema=False)
+app.include_router(dashboard.router, prefix="/api", include_in_schema=False)
+
 
 @app.get("/")
 def root():

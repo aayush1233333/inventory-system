@@ -60,7 +60,11 @@ class Order(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False)
-    status = Column(Enum(OrderStatus), default=OrderStatus.PENDING, nullable=False)
+    status = Column(
+        Enum(OrderStatus, values_callable=lambda x: [e.value for e in x]),
+        default=OrderStatus.PENDING,
+        nullable=False
+    )
     total_amount = Column(Float, nullable=False, default=0.0)
     notes = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

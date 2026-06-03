@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { customersApi } from '../lib/api';
+import { customersApi, getApiErrorMessage } from '../lib/api';
 import toast from 'react-hot-toast';
 import { Plus, Search, Edit2, Trash2, X, Users, Mail, Phone, MapPin } from 'lucide-react';
 
@@ -9,21 +9,28 @@ function CustomerModal({ customer, onClose, onSave }) {
   const [form, setForm] = useState(customer || EMPTY_FORM);
   const [loading, setLoading] = useState(false);
 
+  const cleanText = (value) => (value ?? '').toString().trim();
   const handleChange = (e) => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
 
   const handleSubmit = async () => {
     setLoading(true);
     try {
+      const payload = {
+        name: cleanText(form.name),
+        email: cleanText(form.email).toLowerCase(),
+        phone: cleanText(form.phone) || null,
+        address: cleanText(form.address) || null,
+      };
       if (customer) {
-        await customersApi.update(customer.id, form);
+        await customersApi.update(customer.id, payload);
         toast.success('Customer updated');
       } else {
-        await customersApi.create(form);
+        await customersApi.create(payload);
         toast.success('Customer registered');
       }
       onSave();
     } catch (e) {
-      toast.error(e.response?.data?.detail || 'Error saving customer');
+      toast.error(getApiErrorMessage(e, 'Error saving customer'));
     } finally {
       setLoading(false);
     }
@@ -48,11 +55,11 @@ function CustomerModal({ customer, onClose, onSave }) {
             </div>
             <div className="field">
               <label>Phone</label>
-              <input name="phone" value={form.phone} onChange={handleChange} placeholder="+91 98765 43210" />
+              <input name="phone" value={form.phone || ''} onChange={handleChange} placeholder="+91 98765 43210" />
             </div>
             <div className="field full">
               <label>Address</label>
-              <textarea name="address" value={form.address} onChange={handleChange} placeholder="Street, City, State..." />
+              <textarea name="address" value={form.address || ''} onChange={handleChange} placeholder="Street, City, State..." />
             </div>
           </div>
         </div>
@@ -78,6 +85,9 @@ export default function Customers() {
     try {
       const r = await customersApi.list({ search: search || undefined });
       setCustomers(r.data);
+    } catch (e) {
+      setCustomers([]);
+      toast.error(getApiErrorMessage(e, 'Unable to load customers'), { id: 'customers-load-error' });
     } finally {
       setLoading(false);
     }

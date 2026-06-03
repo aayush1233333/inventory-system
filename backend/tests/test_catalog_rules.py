@@ -57,3 +57,30 @@ def test_product_update_rejects_negative_stock(client: TestClient) -> None:
     )
 
     assert update_response.status_code == 422
+
+
+def test_api_prefix_accepts_catalog_routes(client: TestClient) -> None:
+    product_response = client.post(
+        "/api/products",
+        json={
+            "name": "API Prefix Product",
+            "sku": "API-PREFIX-001",
+            "description": "Created through compatibility prefix",
+            "price": 100.0,
+            "stock_quantity": 4,
+            "low_stock_threshold": 2,
+            "category": "General",
+        },
+    )
+    assert product_response.status_code == 201
+
+    customer_response = client.post(
+        "/api/customers",
+        json={
+            "name": "API Prefix Customer",
+            "email": "api-prefix@example.com",
+            "phone": "+91 90000 00000",
+            "address": "Compatibility route",
+        },
+    )
+    assert customer_response.status_code == 201

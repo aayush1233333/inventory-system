@@ -1,12 +1,61 @@
 import axios from 'axios';
 
-const REMOTE_API_URL = process.env.REACT_APP_API_URL?.replace(/\/$/, '');
+const REMOTE_API_URL = process.env.REACT_APP_API_URL?.trim().replace(/\/$/, '');
 const BASE_URL = REMOTE_API_URL || '/api';
+const API_CONNECTION_HINT =
+  'Cannot reach the backend API. Check REACT_APP_API_URL on the frontend and CORS_ORIGINS on the backend.';
 
 const api = axios.create({
   baseURL: BASE_URL,
   headers: { 'Content-Type': 'application/json' },
 });
+
+const formatDetail = (detail) => {
+  if (typeof detail === 'string') return detail;
+
+  if (Array.isArray(detail)) {
+    return detail
+      .map((item) => {
+        if (!item || typeof item !== 'object') return String(item);
+        const field = Array.isArray(item.loc)
+          ? item.loc.filter((part) => part !== 'body').join('.')
+          : '';
+        return field ? `${field}: ${item.msg}` : item.msg;
+      })
+      .filter(Boolean)
+      .join('; ');
+  }
+
+  if (detail && typeof detail === 'object') {
+    return detail.message || JSON.stringify(detail);
+  }
+
+  return '';
+};
+
+api.interceptors.response.use(
+  (response) => {
+    if (typeof response.data === 'string' && response.data.trim().startsWith('<')) {
+      const error = new Error(API_CONNECTION_HINT);
+      error.isApiConnectionError = true;
+      return Promise.reject(error);
+    }
+    return response;
+  },
+  (error) => Promise.reject(error)
+);
+
+export const getApiErrorMessage = (error, fallback = 'Request failed') => {
+  if (error?.isApiConnectionError) return API_CONNECTION_HINT;
+
+  const detail = formatDetail(error?.response?.data?.detail);
+  if (detail) return detail;
+
+  if (error?.response?.data?.message) return error.response.data.message;
+  if (!error?.response) return API_CONNECTION_HINT;
+
+  return fallback;
+};
 
 export const productsApi = {
   list: (params = {}) => api.get('/products', { params }),

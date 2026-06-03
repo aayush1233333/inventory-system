@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { productsApi } from '../lib/api';
+import { getApiErrorMessage, productsApi } from '../lib/api';
 import toast from 'react-hot-toast';
 import { Plus, Search, Edit2, Trash2, X, Package } from 'lucide-react';
 
@@ -12,16 +12,30 @@ function ProductModal({ product, onClose, onSave }) {
   const [form, setForm] = useState(product || EMPTY_FORM);
   const [loading, setLoading] = useState(false);
 
+  const cleanText = (value) => (value ?? '').toString().trim();
   const handleChange = (e) => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
 
   const handleSubmit = async () => {
+    const price = parseFloat(form.price);
+    const stockQuantity = parseInt(form.stock_quantity, 10);
+    const lowStockThreshold = form.low_stock_threshold === ''
+      ? 10
+      : parseInt(form.low_stock_threshold, 10);
+
+    if (!Number.isFinite(price) || price <= 0) return toast.error('Enter a valid product price');
+    if (!Number.isInteger(stockQuantity) || stockQuantity < 0) return toast.error('Enter a valid stock quantity');
+    if (!Number.isInteger(lowStockThreshold) || lowStockThreshold < 0) return toast.error('Enter a valid low stock threshold');
+
     setLoading(true);
     try {
       const payload = {
-        ...form,
-        price: parseFloat(form.price),
-        stock_quantity: parseInt(form.stock_quantity),
-        low_stock_threshold: parseInt(form.low_stock_threshold),
+        name: cleanText(form.name),
+        sku: cleanText(form.sku),
+        description: cleanText(form.description) || null,
+        price,
+        stock_quantity: stockQuantity,
+        low_stock_threshold: lowStockThreshold,
+        category: cleanText(form.category) || null,
       };
       if (product) {
         await productsApi.replace(product.id, payload);
@@ -32,7 +46,7 @@ function ProductModal({ product, onClose, onSave }) {
       }
       onSave();
     } catch (e) {
-      toast.error(e.response?.data?.detail || 'Error saving product');
+      toast.error(getApiErrorMessage(e, 'Error saving product'));
     } finally {
       setLoading(false);
     }
@@ -69,11 +83,11 @@ function ProductModal({ product, onClose, onSave }) {
             </div>
             <div className="field">
               <label>Category</label>
-              <input name="category" value={form.category} onChange={handleChange} placeholder="e.g. Electronics" />
+              <input name="category" value={form.category || ''} onChange={handleChange} placeholder="e.g. Electronics" />
             </div>
             <div className="field full">
               <label>Description</label>
-              <textarea name="description" value={form.description} onChange={handleChange} placeholder="Optional description..." />
+              <textarea name="description" value={form.description || ''} onChange={handleChange} placeholder="Optional description..." />
             </div>
           </div>
         </div>
@@ -103,6 +117,9 @@ export default function Products() {
     try {
       const r = await productsApi.list({ search: search || undefined });
       setProducts(r.data);
+    } catch (e) {
+      setProducts([]);
+      toast.error(getApiErrorMessage(e, 'Unable to load products'), { id: 'products-load-error' });
     } finally {
       setLoading(false);
     }

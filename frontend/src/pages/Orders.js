@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { ordersApi, customersApi, productsApi } from '../lib/api';
+import { customersApi, getApiErrorMessage, ordersApi, productsApi } from '../lib/api';
 import toast from 'react-hot-toast';
 import { Plus, X, ShoppingCart, Trash2, ChevronDown } from 'lucide-react';
 
@@ -28,6 +28,8 @@ function OrderModal({ onClose, onSave }) {
     ]).then(([c, p]) => {
       setCustomers(c.data);
       setProducts(p.data);
+    }).catch((e) => {
+      toast.error(getApiErrorMessage(e, 'Unable to load order form data'), { id: 'order-form-load-error' });
     });
   }, []);
 
@@ -61,7 +63,7 @@ function OrderModal({ onClose, onSave }) {
       toast.success('Order created successfully');
       onSave();
     } catch (e) {
-      toast.error(e.response?.data?.detail || 'Error creating order');
+      toast.error(getApiErrorMessage(e, 'Error creating order'));
     } finally {
       setLoading(false);
     }
@@ -169,6 +171,9 @@ export default function Orders() {
     try {
       const r = await ordersApi.list({ status: statusFilter || undefined });
       setOrders(r.data);
+    } catch (e) {
+      setOrders([]);
+      toast.error(getApiErrorMessage(e, 'Unable to load orders'), { id: 'orders-load-error' });
     } finally {
       setLoading(false);
     }
@@ -182,7 +187,7 @@ export default function Orders() {
       toast.success(`Order ${newStatus}`);
       load();
     } catch (e) {
-      toast.error(e.response?.data?.detail || 'Failed to update status');
+      toast.error(getApiErrorMessage(e, 'Failed to update status'));
     }
   };
 

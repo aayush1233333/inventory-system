@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { productsApi } from '../lib/api';
+import { getApiErrorMessage, productsApi } from '../lib/api';
 import toast from 'react-hot-toast';
 import { AlertTriangle, Package, Edit2 } from 'lucide-react';
 
@@ -19,6 +19,11 @@ export default function Inventory() {
       setAllProducts(all);
       setLowStock(all.filter(p => p.stock_quantity > 0 && p.stock_quantity <= p.low_stock_threshold));
       setOutOfStock(all.filter(p => p.stock_quantity === 0));
+    } catch (e) {
+      setAllProducts([]);
+      setLowStock([]);
+      setOutOfStock([]);
+      toast.error(getApiErrorMessage(e, 'Unable to load inventory'), { id: 'inventory-load-error' });
     } finally {
       setLoading(false);
     }
@@ -34,8 +39,8 @@ export default function Inventory() {
       toast.success(`Stock updated to ${qty}`);
       setEditingId(null);
       load();
-    } catch {
-      toast.error('Failed to update stock');
+    } catch (e) {
+      toast.error(getApiErrorMessage(e, 'Failed to update stock'));
     }
   };
 

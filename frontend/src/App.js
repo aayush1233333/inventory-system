@@ -49,7 +49,6 @@ function Sidebar({ open, onClose }) {
           <h1>
             Stock<span>Flow</span>
           </h1>
-          <p>Assessment Build</p>
         </div>
         <button className="btn btn-ghost sidebar-close-btn" onClick={onClose}><X /></button>
       </div>
