@@ -17,6 +17,13 @@ Production-ready inventory and order management system built to match the techni
 - Inventory tracking with low-stock and out-of-stock views
 - Dashboard with product, customer, order, and low-stock totals
 
+## Authentication & Authorization
+
+- All `/products`, `/customers`, `/orders`, and `/dashboard` routes require a valid JWT bearer token (`Authorization: Bearer <token>`), obtained via `POST /auth/register` and `POST /auth/login`.
+- Two roles exist: `admin` and `staff` (new accounts default to `staff`).
+- `staff` can create, read, and update products, customers, and orders.
+- Deleting a product, customer, or order is restricted to `admin`, enforced server-side via a `require_role` dependency — not just hidden in the UI.
+
 ## Business Rules
 
 - Product SKU must be unique

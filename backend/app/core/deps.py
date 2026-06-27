@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.security import decode_token
 from app.core.config import get_settings
-from app.models.models import User
+from app.models.models import User, UserRole
 
 bearer = HTTPBearer()
 
@@ -28,3 +28,23 @@ def get_current_user(
             detail="User not found or deactivated",
         )
     return user
+
+
+def require_role(*allowed_roles: UserRole):
+    """Dependency factory enforcing role-based access control.
+
+    Usage: Depends(require_role(UserRole.ADMIN)) restricts an endpoint to
+    admins only. Any authenticated user not holding one of the allowed
+    roles receives a 403, distinct from the 401 raised for missing/invalid
+    auth in get_current_user.
+    """
+
+    def _check(current_user: User = Depends(get_current_user)) -> User:
+        if current_user.role not in allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Requires role: {', '.join(r.value for r in allowed_roles)}",
+            )
+        return current_user
+
+    return _check

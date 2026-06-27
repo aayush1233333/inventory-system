@@ -5,10 +5,12 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.deps import get_current_user, require_role
 from app.crud import customers as crud
+from app.models.models import UserRole
 from app.schemas.schemas import CustomerCreate, CustomerOut, CustomerUpdate
 
-router = APIRouter(prefix="/customers", tags=["Customers"])
+router = APIRouter(prefix="/customers", tags=["Customers"], dependencies=[Depends(get_current_user)])
 
 
 @router.get("", response_model=List[CustomerOut])
@@ -82,7 +84,11 @@ def update_customer(
         ) from exc
 
 
-@router.delete("/{customer_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{customer_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_role(UserRole.ADMIN))],
+)
 def delete_customer(
     customer_id: int,
     db: Session = Depends(get_db),

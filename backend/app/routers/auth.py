@@ -19,7 +19,7 @@ def register(body: UserCreate, db: Session = Depends(get_db)):
             status_code=status.HTTP_409_CONFLICT,
             detail="An account with this email already exists",
         )
-    user = crud_users.create(db, name=body.name, email=body.email, password=body.password)
+    user = crud_users.create(db, name=body.name, email=body.email, password=body.password, role=body.role)
     return user
 
 

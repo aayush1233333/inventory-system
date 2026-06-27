@@ -4,11 +4,12 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.deps import get_current_user, require_role
 from app.crud import orders as crud
-from app.models.models import Customer, OrderStatus
+from app.models.models import Customer, OrderStatus, UserRole
 from app.schemas.schemas import OrderCreate, OrderOut, OrderStatusUpdate
 
-router = APIRouter(prefix="/orders", tags=["Orders"])
+router = APIRouter(prefix="/orders", tags=["Orders"], dependencies=[Depends(get_current_user)])
 
 
 @router.get("", response_model=List[OrderOut])
@@ -67,7 +68,11 @@ def update_order_status(
     return crud.update_status(db, order, body.status)
 
 
-@router.delete("/{order_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{order_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_role(UserRole.ADMIN))],
+)
 def delete_order(
     order_id: int,
     db: Session = Depends(get_db),

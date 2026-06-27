@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getToken, clearSession } from './auth';
 
 const REMOTE_API_URL = process.env.REACT_APP_API_URL?.trim().replace(/\/$/, '');
 const BASE_URL = REMOTE_API_URL || '/api';
@@ -8,6 +9,14 @@ const API_CONNECTION_HINT =
 const api = axios.create({
   baseURL: BASE_URL,
   headers: { 'Content-Type': 'application/json' },
+});
+
+api.interceptors.request.use((config) => {
+  const token = getToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });
 
 const formatDetail = (detail) => {
@@ -42,7 +51,17 @@ api.interceptors.response.use(
     }
     return response;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    // Expired or invalid token: clear the session and bounce to login so
+    // the user doesn't sit on a broken page silently failing requests.
+    if (error?.response?.status === 401 && !error.config?.url?.includes('/auth/login')) {
+      clearSession();
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
 );
 
 export const getApiErrorMessage = (error, fallback = 'Request failed') => {
@@ -55,6 +74,12 @@ export const getApiErrorMessage = (error, fallback = 'Request failed') => {
   if (!error?.response) return API_CONNECTION_HINT;
 
   return fallback;
+};
+
+export const authApi = {
+  login: (data) => api.post('/auth/login', data),
+  register: (data) => api.post('/auth/register', data),
+  me: () => api.get('/auth/me'),
 };
 
 export const productsApi = {

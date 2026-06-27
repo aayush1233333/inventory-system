@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { getApiErrorMessage, productsApi } from '../lib/api';
 import toast from 'react-hot-toast';
 import { Plus, Search, Edit2, Trash2, X, Package } from 'lucide-react';
+import { useAuth } from '../lib/AuthContext';
 
 const EMPTY_FORM = {
   name: '', sku: '', description: '', price: '', stock_quantity: '',
@@ -107,6 +108,7 @@ function ProductModal({ product, onClose, onSave }) {
 }
 
 export default function Products() {
+  const { isAdmin } = useAuth();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -213,7 +215,9 @@ export default function Products() {
                       <td>
                         <div style={{ display: 'flex', gap: 6 }}>
                           <button className="btn btn-ghost" onClick={() => setModal(p)} style={{ padding: '5px 8px' }}><Edit2 /></button>
-                          <button className="btn btn-danger" onClick={() => handleDelete(p.id, p.name)} style={{ padding: '5px 8px' }}><Trash2 /></button>
+                          {isAdmin && (
+                            <button className="btn btn-danger" onClick={() => handleDelete(p.id, p.name)} style={{ padding: '5px 8px' }}><Trash2 /></button>
+                          )}
                         </div>
                       </td>
                     </tr>

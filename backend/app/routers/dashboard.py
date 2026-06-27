@@ -3,10 +3,11 @@ from sqlalchemy import func, select, true
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.deps import get_current_user
 from app.models.models import Customer, Order, OrderStatus, Product
 from app.schemas.schemas import DashboardStats
 
-router = APIRouter(prefix="/dashboard", tags=["Dashboard"])
+router = APIRouter(prefix="/dashboard", tags=["Dashboard"], dependencies=[Depends(get_current_user)])
 
 
 @router.get("/stats", response_model=DashboardStats)

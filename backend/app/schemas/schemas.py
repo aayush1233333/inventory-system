@@ -3,13 +3,17 @@ from typing import List, Optional
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
-from app.models.models import OrderStatus
+from app.models.models import OrderStatus, UserRole
 
 
 class UserCreate(BaseModel):
     name: str
     email: EmailStr
     password: str
+    # Defaults to STAFF. In a real production system, only an existing admin
+    # would be allowed to grant the ADMIN role (e.g. via a separate
+    # admin-only endpoint) rather than exposing it on open self-registration.
+    role: UserRole = UserRole.STAFF
 
     @field_validator("password")
     @classmethod
@@ -28,6 +32,7 @@ class UserOut(BaseModel):
     id: int
     name: str
     email: str
+    role: UserRole
     is_active: bool
     created_at: datetime
 

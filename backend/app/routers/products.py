@@ -5,10 +5,12 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.core.deps import get_current_user, require_role
 from app.crud import products as crud
+from app.models.models import UserRole
 from app.schemas.schemas import ProductCreate, ProductOut, ProductUpdate
 
-router = APIRouter(prefix="/products", tags=["Products"])
+router = APIRouter(prefix="/products", tags=["Products"], dependencies=[Depends(get_current_user)])
 
 
 @router.get("", response_model=List[ProductOut])
@@ -100,7 +102,11 @@ def update_product(
     return _save_product_update(product_id, updates, db)
 
 
-@router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{product_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_role(UserRole.ADMIN))],
+)
 def delete_product(
     product_id: int,
     db: Session = Depends(get_db),

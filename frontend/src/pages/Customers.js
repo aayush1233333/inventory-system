@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { customersApi, getApiErrorMessage } from '../lib/api';
 import toast from 'react-hot-toast';
 import { Plus, Search, Edit2, Trash2, X, Users, Mail, Phone, MapPin } from 'lucide-react';
+import { useAuth } from '../lib/AuthContext';
 
 const EMPTY_FORM = { name: '', email: '', phone: '', address: '' };
 
@@ -75,6 +76,7 @@ function CustomerModal({ customer, onClose, onSave }) {
 }
 
 export default function Customers() {
+  const { isAdmin } = useAuth();
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -183,7 +185,9 @@ export default function Customers() {
                     <td>
                       <div style={{ display: 'flex', gap: 6 }}>
                         <button className="btn btn-ghost" onClick={() => setModal(c)} style={{ padding: '5px 8px' }}><Edit2 /></button>
-                        <button className="btn btn-danger" onClick={() => handleDelete(c.id, c.name)} style={{ padding: '5px 8px' }}><Trash2 /></button>
+                        {isAdmin && (
+                          <button className="btn btn-danger" onClick={() => handleDelete(c.id, c.name)} style={{ padding: '5px 8px' }}><Trash2 /></button>
+                        )}
                       </div>
                     </td>
                   </tr>

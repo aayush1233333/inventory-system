@@ -13,6 +13,11 @@ class OrderStatus(str, enum.Enum):
     CANCELLED = "cancelled"
 
 
+class UserRole(str, enum.Enum):
+    ADMIN = "admin"
+    STAFF = "staff"
+
+
 class User(Base):
     __tablename__ = "users"
 
@@ -20,6 +25,12 @@ class User(Base):
     name = Column(String(255), nullable=False)
     email = Column(String(255), unique=True, nullable=False, index=True)
     hashed_password = Column(String(255), nullable=False)
+    role = Column(
+        Enum(UserRole, values_callable=lambda x: [e.value for e in x]),
+        default=UserRole.STAFF,
+        nullable=False,
+        server_default=UserRole.STAFF.value,
+    )
     is_active = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
