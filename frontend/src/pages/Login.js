@@ -33,7 +33,7 @@ export default function Login() {
       <div className="card auth-card">
         <div className="sidebar-logo" style={{ borderBottom: 'none', padding: '0 0 20px', textAlign: 'center' }}>
           <h1>
-            Stock<span>Flow</span>
+            <span style={{ color: '#1e293b' }}>Stock</span><span>Flow</span>
           </h1>
         </div>
 
